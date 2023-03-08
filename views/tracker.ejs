@@ -1,0 +1,27 @@
+<%- include("header") -%>
+    <div class="box" id="heading">
+      <h1>Tennis tracker</h1>
+    </div>
+
+    <div class="box">
+      <form action="/" method="post">
+        <label for="playerInput">Search for a pro!</label>
+        <input id="playerInput" type="text" name="playerName">
+        <button type="submit">Search</button>
+      </form>
+    </div>
+
+    <div class="card" style="width: 28rem;">
+      <img class="card-img-top" src="..." alt="Image not found">
+      <div class="card-body">
+        <h5 class="card-title">Player Info</h5>
+        <p class="card-text">Name: <%= user_input %></p>
+        <p class="card-text">Age: </p>
+        <p class="card-text">Nationality: </p>
+        <p class="card-text">Plays: </p>
+      </div>
+    </div>      
+    
+
+
+<%- include("footer") -%>
