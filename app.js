@@ -1,13 +1,15 @@
 const express = require("express");
 const ejs = require("ejs");
 const bodyParser = require("body-parser");
+// const _ = require("lodash"); // needs to be installed via npm
 
 const app = express();
+
 app.set('view engine', 'ejs');
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: false }))
+// app.use(express.json({limit: "1mb"}));
 
-//Sample data is a boiled down version of what you would expect to receive from the API, used for testing purposes
 const sample_rankings = {
   "generated_at": "2023-03-07T09:41:11+00:00",
   "rankings": [
@@ -200,13 +202,80 @@ const sample_profile = {
 var userInput;
 var mens_rankings;
 var womens_rankings;
+const url = "http://api.sportradar.us/tennis/trial/v3/en/rankings.json?api_key=66nyxur4dpxry94shxdau69q";
+// const url = "https://api.sportradar.us/tennis/trial/v3/en/competitions/sr:competition:3101/info.json?api_key=66nyxur4dpxry94shxdau69q";
+
+////////////////// FETCHING API DATA //////////////////
+async function getRankings() {
+  const response = await fetch(url);
+  const data = await response.json(); //entire API response
+  // console.log(data);
+
+  //splitting dataset into top 500 male and female
+  mens_rankings = data.rankings[0]; //top 500 men rankings
+  // console.log("\nmen's data (first result only): ");
+  // console.log(mens_rankings.competitor_rankings[0]);
+
+  womens_rankings = data.rankings[1]; //top 500 women's rankings
+  // console.log("\nwomen's data (first result only): ");
+  // console.log(womens_rankings.competitor_rankings[0]);
+
+  // console.log("\nmens_rankings type: ");
+  // console.log(typeof mens_rankings);
+  // console.log("\nmens_rankings.competitor_rankings[0] type: ");
+  // console.log(typeof mens_rankings.competitor_rankings[0]);
+
+  // const stitched_data = Object.assign(mens_rankings.competitor_rankings[0], womens_rankings.competitor_rankings[0]);
+  // const stitched_data = mens_rankings.competitor_rankings[0].push(womens_rankings.competitor_rankings[0]);
+  // const stitched_data = {...mens_rankings.competitor_rankings[0].competitor, ...womens_rankings.competitor_rankings[0].competitor};
+  // console.log("\nstitched data: "); 
+  // console.log(stitched_data);
 
   
+  const obj1 = {
+    id: 'sr:competitor:14882',
+    name: 'Djokovic, Novak',
+    country: 'Serbia',
+    country_code: 'SRB',
+    abbreviation: 'DJO'
+  };
+  
+  const obj2 = {
+    id: 'sr:competitor:274013',
+    name: 'Swiatek, Iga',
+    country: 'Poland',
+    country_code: 'POL',
+    abbreviation: 'SWI'
+  };
+
+  const obj3 = {obj1, obj2};
+  console.log("\ntesting obj3: "); 
+  console.log(obj3);
+
+  
+  //accessing individual pro data
+  // console.log("\n #8 ranked male: ");
+  // console.log(mens_rankings.competitor_rankings[7]); //individual competitor info including name and ID
+  // console.log("\n #1 ranked female: ");
+  // console.log(womens_rankings.competitor_rankings[0]);
+
+  //diving deeper to retrieve names and IDs
+  // console.log("\n #8 ranked male ID: ");
+  // console.log(mens_rankings.competitor_rankings[7].competitor.id);
+  // console.log("\n #1 ranked female name: ");
+  // console.log(womens_rankings.competitor_rankings[0].competitor.name);
+  
+
+  
+} 
+
+getRankings(); 
+
 ////////////////// HANDLING GET/POST REQUESTS //////////////////
 app.route("/")
   .get((req, res) => { 
     
-    res.render("tracker", {user_input: userInput});
+    res.render("tracker", {user_inputted_pro: womens_rankings.competitor_rankings[0].competitor.name, user_input: userInput}); //competition_id: competitionID
   })
 
   //AIM: User inputs pro player name, corresponding ID is then found inside stiched dataset and relevant 
