@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const ejs = require("ejs");
 const bodyParser = require("body-parser");
@@ -202,8 +203,9 @@ const sample_profile = {
 var userInput;
 var mens_rankings;
 var womens_rankings;
-const url = "http://api.sportradar.us/tennis/trial/v3/en/rankings.json?api_key=66nyxur4dpxry94shxdau69q";
-// const url = "https://api.sportradar.us/tennis/trial/v3/en/competitions/sr:competition:3101/info.json?api_key=66nyxur4dpxry94shxdau69q";
+const api_key = process.env.API_KEY;
+const url = "http://api.sportradar.us/tennis/trial/v3/en/rankings.json?api_key=" + api_key;
+// const url = "https://api.sportradar.us/tennis/trial/v3/en/competitions/sr:competition:3101/info.json?api_key=" + api_key;
 
 ////////////////// FETCHING API DATA //////////////////
 async function getRankings() {
