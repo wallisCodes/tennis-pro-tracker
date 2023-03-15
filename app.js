@@ -112,6 +112,59 @@ const sample_rankings = {
   ]
 }
 
+console.log("mens competitor rankings:");
+console.log(sample_rankings.rankings[0].competitor_rankings);
+// console.log("\nwomens competitor rankings:"); 
+// console.log(sample_rankings.rankings[1].competitor_rankings);
+// console.log("\ntest print type: " + typeof sample_rankings.rankings);
+
+console.log("\nmens e.g. 2nd competitor info:");
+console.log(sample_rankings.rankings[0].competitor_rankings[1]); //2nd rank info
+console.log("\nmens competitor id:");
+console.log(sample_rankings.rankings[0].competitor_rankings[1].competitor.id); //2nd rank id
+
+var test_obj_1 = {
+    id: sample_rankings.rankings[0].competitor_rankings[0].competitor.id,
+    name: sample_rankings.rankings[0].competitor_rankings[0].competitor.name
+};
+
+var test_obj_2 = {
+    id: sample_rankings.rankings[0].competitor_rankings[1].competitor.id,
+    name: sample_rankings.rankings[0].competitor_rankings[1].competitor.name
+};
+
+var test_obj_3 = {
+    id: sample_rankings.rankings[0].competitor_rankings[2].competitor.id,
+    name: sample_rankings.rankings[0].competitor_rankings[2].competitor.name
+};
+
+var test_obj_4 = {
+    id: sample_rankings.rankings[1].competitor_rankings[0].competitor.id,
+    name: sample_rankings.rankings[1].competitor_rankings[0].competitor.name
+};
+
+var test_obj_5 = {
+    id: sample_rankings.rankings[1].competitor_rankings[1].competitor.id,
+    name: sample_rankings.rankings[1].competitor_rankings[1].competitor.name
+};
+
+var test_obj_6 = {
+    id: sample_rankings.rankings[1].competitor_rankings[2].competitor.id,
+    name: sample_rankings.rankings[1].competitor_rankings[2].competitor.name
+};
+
+var test_array = [test_obj_1, test_obj_2, test_obj_3, test_obj_4, test_obj_5];
+
+console.log("\nprinting test array...");
+console.log(test_array);
+console.log("\nlength of array = " + test_array.length);
+
+test_array.push(test_obj_6);
+
+console.log("\nprinting NEW test array...");
+console.log(test_array);
+console.log("\nlength of array = " + test_array.length);
+
 const sample_profile = {
   "generated_at": "2023-03-07T09:17:14+00:00",
   "competitor": {
@@ -209,16 +262,16 @@ const url = "http://api.sportradar.us/tennis/trial/v3/en/rankings.json?api_key="
 
 ////////////////// FETCHING API DATA //////////////////
 async function getRankings() {
-  const response = await fetch(url);
-  const data = await response.json(); //entire API response
+//   const response = await fetch(url);
+//   const data = await response.json(); //entire API response
   // console.log(data);
 
   //splitting dataset into top 500 male and female
-  mens_rankings = data.rankings[0]; //top 500 men rankings
+//   mens_rankings = data.rankings[0]; //top 500 men rankings
   // console.log("\nmen's data (first result only): ");
   // console.log(mens_rankings.competitor_rankings[0]);
 
-  womens_rankings = data.rankings[1]; //top 500 women's rankings
+//   womens_rankings = data.rankings[1]; //top 500 women's rankings
   // console.log("\nwomen's data (first result only): ");
   // console.log(womens_rankings.competitor_rankings[0]);
 
@@ -234,25 +287,26 @@ async function getRankings() {
   // console.log(stitched_data);
 
   
-  const obj1 = {
-    id: 'sr:competitor:14882',
-    name: 'Djokovic, Novak',
-    country: 'Serbia',
-    country_code: 'SRB',
-    abbreviation: 'DJO'
-  };
+//   const obj1 = {
+//     id: 'sr:competitor:14882',
+//     name: 'Djokovic, Novak',
+//     country: 'Serbia',
+//     country_code: 'SRB',
+//     abbreviation: 'DJO'
+//   };
   
-  const obj2 = {
-    id: 'sr:competitor:274013',
-    name: 'Swiatek, Iga',
-    country: 'Poland',
-    country_code: 'POL',
-    abbreviation: 'SWI'
-  };
+//   const obj2 = {
+//     id: 'sr:competitor:274013',
+//     name: 'Swiatek, Iga',
+//     country: 'Poland',
+//     country_code: 'POL',
+//     abbreviation: 'SWI'
+//   };
 
-  const obj3 = {obj1, obj2};
-  console.log("\ntesting obj3: "); 
-  console.log(obj3);
+//   const obj3 = {obj1, obj2};
+//   console.log("\n|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
+//   console.log("\ntesting obj3: "); 
+//   console.log(obj3);
 
   
   //accessing individual pro data
@@ -277,7 +331,8 @@ getRankings();
 app.route("/")
   .get((req, res) => { 
     
-    res.render("tracker", {user_inputted_pro: womens_rankings.competitor_rankings[0].competitor.name, user_input: userInput}); //competition_id: competitionID
+    // res.render("tracker", {user_inputted_pro: womens_rankings.competitor_rankings[0].competitor.name, user_input: userInput}); //competition_id: competitionID
+    res.render("tracker", {user_input: userInput});
   })
 
   //AIM: User inputs pro player name, corresponding ID is then found inside stiched dataset and relevant 
