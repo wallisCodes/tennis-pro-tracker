@@ -112,62 +112,88 @@ const sample_rankings = {
   ]
 }
 
-console.log("mens competitor rankings:");
-console.log(sample_rankings.rankings[0].competitor_rankings);
+// console.log("mens competitor rankings:");
+// console.log(sample_rankings.rankings[0].competitor_rankings);
 // console.log("\nwomens competitor rankings:"); 
 // console.log(sample_rankings.rankings[1].competitor_rankings);
 // console.log("\ntest print type: " + typeof sample_rankings.rankings);
 
-console.log("\nmens e.g. 2nd competitor info:");
-console.log(sample_rankings.rankings[0].competitor_rankings[1]); //2nd rank info
-console.log("\nmens competitor id:");
-console.log(sample_rankings.rankings[0].competitor_rankings[1].competitor.id); //2nd rank id
+// console.log("\nmens e.g. 2nd competitor info:");
+// console.log(sample_rankings.rankings[0].competitor_rankings[1]); //2nd rank info
+// console.log("\nmens competitor id:");
+// console.log(sample_rankings.rankings[0].competitor_rankings[1].competitor.id); //2nd rank id
 
-var test_obj_1 = {
-    id: sample_rankings.rankings[0].competitor_rankings[0].competitor.id,
-    name: sample_rankings.rankings[0].competitor_rankings[0].competitor.name
-};
-
-var test_obj_2 = {
-    id: sample_rankings.rankings[0].competitor_rankings[1].competitor.id,
-    name: sample_rankings.rankings[0].competitor_rankings[1].competitor.name
-};
-
-var test_obj_3 = {
-    id: sample_rankings.rankings[0].competitor_rankings[2].competitor.id,
-    name: sample_rankings.rankings[0].competitor_rankings[2].competitor.name
-};
-
-var test_obj_4 = {
-    id: sample_rankings.rankings[1].competitor_rankings[0].competitor.id,
-    name: sample_rankings.rankings[1].competitor_rankings[0].competitor.name
-};
-
-var test_obj_5 = {
-    id: sample_rankings.rankings[1].competitor_rankings[1].competitor.id,
-    name: sample_rankings.rankings[1].competitor_rankings[1].competitor.name
-};
-
-var test_obj_6 = {
-    id: sample_rankings.rankings[1].competitor_rankings[2].competitor.id,
-    name: sample_rankings.rankings[1].competitor_rankings[2].competitor.name
-};
-
-var test_array = [test_obj_1, test_obj_2, test_obj_3, test_obj_4, test_obj_5];
-
-console.log("\nprinting test array...");
-console.log(test_array);
-console.log("\nlength of array = " + test_array.length);
-
-test_array.push(test_obj_6);
-
-console.log("\nprinting NEW test array...");
-console.log(test_array);
-console.log("\nlength of array = " + test_array.length);
+var player_lookup = []; //array to store all player name and IDs so the user can search for a name and the
+                        //corresponding ID can be used in another API request to retrieve player stats
 
 //adding length of both men and women objects which gives us total number of players (6 in this example)
 const total_pros = sample_rankings.rankings[0].competitor_rankings.length + sample_rankings.rankings[1].competitor_rankings.length;
 console.log("\ntotal number of players: " + total_pros);
+
+for (let i=0; i < total_pros; i++){
+    if (i < total_pros/2){ //NOTE: this logic only works for the same (even) number of male and female players
+        player_lookup.push({
+            name: sample_rankings.rankings[0].competitor_rankings[i].competitor.name,
+            id: sample_rankings.rankings[0].competitor_rankings[i].competitor.id
+        });
+    } else {
+        player_lookup.push({
+            name: sample_rankings.rankings[1].competitor_rankings[i - total_pros/2].competitor.name,
+            id: sample_rankings.rankings[1].competitor_rankings[i - total_pros/2].competitor.id
+        });
+    }  
+}
+
+console.log("\nTESTING for loop constructed array:");
+console.log(player_lookup);
+
+
+//code for testing how to construct a new array using API data
+function test_array(){
+    var test_obj_1 = {
+        id: sample_rankings.rankings[0].competitor_rankings[0].competitor.id,
+        name: sample_rankings.rankings[0].competitor_rankings[0].competitor.name
+    };
+    
+    var test_obj_2 = {
+        id: sample_rankings.rankings[0].competitor_rankings[1].competitor.id,
+        name: sample_rankings.rankings[0].competitor_rankings[1].competitor.name
+    };
+    
+    var test_obj_3 = {
+        id: sample_rankings.rankings[0].competitor_rankings[2].competitor.id,
+        name: sample_rankings.rankings[0].competitor_rankings[2].competitor.name
+    };
+    
+    var test_obj_4 = {
+        id: sample_rankings.rankings[1].competitor_rankings[0].competitor.id,
+        name: sample_rankings.rankings[1].competitor_rankings[0].competitor.name
+    };
+    
+    var test_obj_5 = {
+        id: sample_rankings.rankings[1].competitor_rankings[1].competitor.id,
+        name: sample_rankings.rankings[1].competitor_rankings[1].competitor.name
+    };
+    
+    var test_obj_6 = {
+        id: sample_rankings.rankings[1].competitor_rankings[2].competitor.id,
+        name: sample_rankings.rankings[1].competitor_rankings[2].competitor.name
+    };
+    
+    var test_array = [test_obj_1, test_obj_2, test_obj_3, test_obj_4, test_obj_5];
+    
+    console.log("\nprinting test array...");
+    console.log(test_array);
+    console.log("\nlength of array = " + test_array.length);
+    
+    test_array.push(test_obj_6);
+    
+    console.log("\nprinting NEW test array...");
+    console.log(test_array);
+    console.log("\nlength of array = " + test_array.length);
+}
+// test_array();
+
 
 //Search through test array names and find matching ID...
 const name_input = "Alcaraz, Carlos";
