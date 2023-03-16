@@ -165,6 +165,14 @@ console.log("\nprinting NEW test array...");
 console.log(test_array);
 console.log("\nlength of array = " + test_array.length);
 
+//adding length of both men and women objects which gives us total number of players (6 in this example)
+const total_pros = sample_rankings.rankings[0].competitor_rankings.length + sample_rankings.rankings[1].competitor_rankings.length;
+console.log("\ntotal number of players: " + total_pros);
+
+//Search through test array names and find matching ID...
+const name_input = "Alcaraz, Carlos";
+
+
 const sample_profile = {
   "generated_at": "2023-03-07T09:17:14+00:00",
   "competitor": {
