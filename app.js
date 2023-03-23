@@ -9,7 +9,6 @@ const app = express();
 app.set('view engine', 'ejs');
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: false }))
-// app.use(express.json({limit: "1mb"}));
 
 const sample_rankings = {
   "generated_at": "2023-03-07T09:41:11+00:00",
@@ -112,93 +111,6 @@ const sample_rankings = {
   ]
 }
 
-// console.log("mens competitor rankings:");
-// console.log(sample_rankings.rankings[0].competitor_rankings);
-// console.log("\nwomens competitor rankings:"); 
-// console.log(sample_rankings.rankings[1].competitor_rankings);
-// console.log("\ntest print type: " + typeof sample_rankings.rankings);
-
-// console.log("\nmens e.g. 2nd competitor info:");
-// console.log(sample_rankings.rankings[0].competitor_rankings[1]); //2nd rank info
-// console.log("\nmens competitor id:");
-// console.log(sample_rankings.rankings[0].competitor_rankings[1].competitor.id); //2nd rank id
-
-var player_lookup = []; //array to store all player name and IDs so the user can search for a name and the
-                        //corresponding ID can be used in another API request to retrieve player stats
-
-//adding length of both men and women objects which gives us total number of players (6 in this example)
-const total_pros = sample_rankings.rankings[0].competitor_rankings.length + sample_rankings.rankings[1].competitor_rankings.length;
-console.log("\ntotal number of players: " + total_pros);
-
-for (let i=0; i < total_pros; i++){
-    if (i < total_pros/2){ //NOTE: this logic only works for the same (even) number of male and female players
-        player_lookup.push({
-            name: sample_rankings.rankings[0].competitor_rankings[i].competitor.name,
-            id: sample_rankings.rankings[0].competitor_rankings[i].competitor.id
-        });
-    } else {
-        player_lookup.push({
-            name: sample_rankings.rankings[1].competitor_rankings[i - total_pros/2].competitor.name,
-            id: sample_rankings.rankings[1].competitor_rankings[i - total_pros/2].competitor.id
-        });
-    }  
-}
-
-console.log("\nTESTING for loop constructed array:");
-console.log(player_lookup);
-
-
-//code for testing how to construct a new array using API data
-function test_array(){
-    var test_obj_1 = {
-        id: sample_rankings.rankings[0].competitor_rankings[0].competitor.id,
-        name: sample_rankings.rankings[0].competitor_rankings[0].competitor.name
-    };
-    
-    var test_obj_2 = {
-        id: sample_rankings.rankings[0].competitor_rankings[1].competitor.id,
-        name: sample_rankings.rankings[0].competitor_rankings[1].competitor.name
-    };
-    
-    var test_obj_3 = {
-        id: sample_rankings.rankings[0].competitor_rankings[2].competitor.id,
-        name: sample_rankings.rankings[0].competitor_rankings[2].competitor.name
-    };
-    
-    var test_obj_4 = {
-        id: sample_rankings.rankings[1].competitor_rankings[0].competitor.id,
-        name: sample_rankings.rankings[1].competitor_rankings[0].competitor.name
-    };
-    
-    var test_obj_5 = {
-        id: sample_rankings.rankings[1].competitor_rankings[1].competitor.id,
-        name: sample_rankings.rankings[1].competitor_rankings[1].competitor.name
-    };
-    
-    var test_obj_6 = {
-        id: sample_rankings.rankings[1].competitor_rankings[2].competitor.id,
-        name: sample_rankings.rankings[1].competitor_rankings[2].competitor.name
-    };
-    
-    var test_array = [test_obj_1, test_obj_2, test_obj_3, test_obj_4, test_obj_5];
-    
-    console.log("\nprinting test array...");
-    console.log(test_array);
-    console.log("\nlength of array = " + test_array.length);
-    
-    test_array.push(test_obj_6);
-    
-    console.log("\nprinting NEW test array...");
-    console.log(test_array);
-    console.log("\nlength of array = " + test_array.length);
-}
-// test_array();
-
-
-//Search through test array names and find matching ID...
-const name_input = "Alcaraz, Carlos";
-
-
 const sample_profile = {
   "generated_at": "2023-03-07T09:17:14+00:00",
   "competitor": {
@@ -286,95 +198,101 @@ const sample_profile = {
   ]
 }
 
-
-var userInput;
-var mens_rankings;
-var womens_rankings;
+//Defining key variables used on the back end
 const api_key = process.env.API_KEY;
-const url = "http://api.sportradar.us/tennis/trial/v3/en/rankings.json?api_key=" + api_key;
-// const url = "https://api.sportradar.us/tennis/trial/v3/en/competitions/sr:competition:3101/info.json?api_key=" + api_key;
+var user_input, rankings_data;
+var pro_name, pro_country, pro_dob, pro_handedness; //is it possible to have this as an array to be passed to the ejs file?
+var player_lookup = []; //array to store all player name and IDs so the user can search for a name and the
+                        //corresponding ID can be used in another API request to retrieve player stats
+const rankings_url = "http://api.sportradar.us/tennis/trial/v3/en/rankings.json?api_key=" + api_key;
+// const competitions_url = "https://api.sportradar.us/tennis/trial/v3/en/competitions/sr:competition:3101/info.json?api_key=" + api_key;
 
-////////////////// FETCHING API DATA //////////////////
+
+////////////////// FETCHING API DATA - TOP 500 MEN AND WOMENS RANKINGS //////////////////
 async function getRankings() {
-//   const response = await fetch(url);
-//   const data = await response.json(); //entire API response
-  // console.log(data);
+    const response = await fetch(rankings_url);
+    all_data = await response.json(); //entire API response
+    rankings_data = all_data.rankings;
+    // console.log("\nRANKING DATA:");
+    // console.log(rankings_data);
 
-  //splitting dataset into top 500 male and female
-//   mens_rankings = data.rankings[0]; //top 500 men rankings
-  // console.log("\nmen's data (first result only): ");
-  // console.log(mens_rankings.competitor_rankings[0]);
-
-//   womens_rankings = data.rankings[1]; //top 500 women's rankings
-  // console.log("\nwomen's data (first result only): ");
-  // console.log(womens_rankings.competitor_rankings[0]);
-
-  // console.log("\nmens_rankings type: ");
-  // console.log(typeof mens_rankings);
-  // console.log("\nmens_rankings.competitor_rankings[0] type: ");
-  // console.log(typeof mens_rankings.competitor_rankings[0]);
-
-  // const stitched_data = Object.assign(mens_rankings.competitor_rankings[0], womens_rankings.competitor_rankings[0]);
-  // const stitched_data = mens_rankings.competitor_rankings[0].push(womens_rankings.competitor_rankings[0]);
-  // const stitched_data = {...mens_rankings.competitor_rankings[0].competitor, ...womens_rankings.competitor_rankings[0].competitor};
-  // console.log("\nstitched data: "); 
-  // console.log(stitched_data);
-
-  
-//   const obj1 = {
-//     id: 'sr:competitor:14882',
-//     name: 'Djokovic, Novak',
-//     country: 'Serbia',
-//     country_code: 'SRB',
-//     abbreviation: 'DJO'
-//   };
-  
-//   const obj2 = {
-//     id: 'sr:competitor:274013',
-//     name: 'Swiatek, Iga',
-//     country: 'Poland',
-//     country_code: 'POL',
-//     abbreviation: 'SWI'
-//   };
-
-//   const obj3 = {obj1, obj2};
-//   console.log("\n|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-//   console.log("\ntesting obj3: "); 
-//   console.log(obj3);
-
-  
-  //accessing individual pro data
-  // console.log("\n #8 ranked male: ");
-  // console.log(mens_rankings.competitor_rankings[7]); //individual competitor info including name and ID
-  // console.log("\n #1 ranked female: ");
-  // console.log(womens_rankings.competitor_rankings[0]);
-
-  //diving deeper to retrieve names and IDs
-  // console.log("\n #8 ranked male ID: ");
-  // console.log(mens_rankings.competitor_rankings[7].competitor.id);
-  // console.log("\n #1 ranked female name: ");
-  // console.log(womens_rankings.competitor_rankings[0].competitor.name);
-  
-
-  
+    // adding length of both men and women objects which gives us total number of players (should be 1000, 500 men and women)
+    const total_pros = rankings_data[0].competitor_rankings.length + rankings_data[1].competitor_rankings.length;
+    console.log("\ntotal number of players: " + total_pros);
+    
+    //Trimming response down to only pro player names and IDs for use with the getCompetitorProfile() function below
+    for (let i=0; i < total_pros; i++){
+        //NOTE: this logic only works for the same (even) number of male and female players
+        if (i < total_pros/2){ //male pros
+            player_lookup.push({
+                name: rankings_data[0].competitor_rankings[i].competitor.name,
+                id: rankings_data[0].competitor_rankings[i].competitor.id
+            });
+        } else { //female pros
+            player_lookup.push({
+                name: rankings_data[1].competitor_rankings[i - total_pros/2].competitor.name,
+                id: rankings_data[1].competitor_rankings[i - total_pros/2].competitor.id
+            });
+        }  
+    }
+    
+    console.log("\nTESTING for loop constructed array:");
+    console.log(player_lookup);
 } 
+getRankings();
 
-getRankings(); 
+
+//Function to retrieve specific pro stats based on which ID it is fed
+async function getCompetitorProfile(competitor_id){
+    const profile_url = "http://api.sportradar.us/tennis/trial/v3/en/competitors/" + competitor_id + "/profile.json?api_key=" + api_key;
+    const response = await fetch(profile_url);
+    const profile_data = await response.json(); //entire API response
+    // console.log("\nEntire profile data:");
+    // console.log(profile_data);
+    pro_name = profile_data.competitor.name;
+    pro_country = profile_data.competitor.country;
+    pro_dob = profile_data.info.date_of_birth;
+    pro_handedness = profile_data.info.handedness;
+}
+
 
 ////////////////// HANDLING GET/POST REQUESTS //////////////////
 app.route("/")
   .get((req, res) => { 
-    
-    // res.render("tracker", {user_inputted_pro: womens_rankings.competitor_rankings[0].competitor.name, user_input: userInput}); //competition_id: competitionID
-    res.render("tracker", {user_input: userInput});
+    res.render("tracker", {proName: pro_name, proCountry: pro_country, proDoB: pro_dob, proHandedness: pro_handedness});
   })
 
   //AIM: User inputs pro player name, corresponding ID is then found inside stiched dataset and relevant 
   //competitor info is returned to user nicely formatted using cards etc.
   .post((req, res) => {
 
-    userInput = req.body.playerName;
-    console.log(userInput);
+    user_input = req.body.playerName;
+    console.log("|||||||||||||||||||||||||||||||||||||||||||||||||\nUser input: " + user_input);
+
+    var player_found = false;
+    //Search through test array names and find matching ID...
+    function retrieveID(name_value, player_array){
+        for (let i=0; i < player_array.length; i++){
+            // console.log("Iteration number: " + (i+1));
+            if (player_array[i].name === name_value){
+                player_found = true;
+                return player_array[i].id;
+            } 
+        }
+    }
+
+    //Retrieve relevant pro ID based on user inputted name
+    pro_id = retrieveID(user_input, player_lookup);
+    console.log("Player ID: " + pro_id);
+
+    //Check to see whether a player was found or not and display relevant message to the user
+    if (player_found === true){
+        console.log("Player found!");
+        getCompetitorProfile(pro_id);
+    }
+    else {
+        console.log("Player not found, please search again.");
+    }
 
     res.redirect("/");
   });
