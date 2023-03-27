@@ -201,7 +201,7 @@ const sample_profile = {
 //Defining key variables used on the back end
 const api_key = process.env.API_KEY;
 var user_input, rankings_data;
-var pro_name, pro_country, pro_dob, pro_handedness; //is it possible to have this as an array to be passed to the ejs file?
+var pro_name, pro_rank, pro_rank_movement, pro_country, pro_dob, pro_handedness; //is it possible to have this as an array to be passed to the ejs file?
 var player_lookup = []; //array to store all player name and IDs so the user can search for a name and the
                         //corresponding ID can be used in another API request to retrieve player stats
 const rankings_url = "http://api.sportradar.us/tennis/trial/v3/en/rankings.json?api_key=" + api_key;
@@ -250,16 +250,22 @@ async function getCompetitorProfile(competitor_id){
     // console.log("\nEntire profile data:");
     // console.log(profile_data);
     pro_name = profile_data.competitor.name;
+    pro_rank = profile_data.competitor_rankings[0].rank;
+    pro_rank_movement = profile_data.competitor_rankings[0].movement;
     pro_country = profile_data.competitor.country;
     pro_dob = profile_data.info.date_of_birth;
     pro_handedness = profile_data.info.handedness;
+
+    console.log("\nRank: " + pro_rank);
+    console.log("\nRank movement: " + pro_rank_movement);
 }
 
 
 ////////////////// HANDLING GET/POST REQUESTS //////////////////
 app.route("/")
   .get((req, res) => { 
-    res.render("tracker", {proName: pro_name, proCountry: pro_country, proDoB: pro_dob, proHandedness: pro_handedness});
+    res.render("tracker", {proName: pro_name, proRank: pro_rank, proRankMovement: pro_rank_movement, 
+                        proCountry: pro_country, proDoB: pro_dob, proHandedness: pro_handedness});
   })
 
   //AIM: User inputs pro player name, corresponding ID is then found inside stiched dataset and relevant 
