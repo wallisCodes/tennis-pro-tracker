@@ -3,12 +3,12 @@
       <h1>Tennis tracker</h1>
     </div>
 
-    <div class="box">
+    <div>
       <form action="/" method="post">
-        <label for="playerInput">Search for a pro!</label>
-        <input id="playerInput" type="text" name="playerName">
-        <button type="submit">Search</button>
+        <input id="playerInput" type="text" name="playerName" placeholder="Enter pro player">
+        <button class="btn btn-light" type="submit">Search</button>
       </form>
+      <p id="userInputFeedback"></p>
     </div>
 
     <div class="card" style="width: 28rem;">
@@ -17,9 +17,15 @@
         <h5 class="card-title"><b>Player Info</b></h5>
         <p class="card-text">Name: <%= proName %></p>
         <p class="card-text">Country: <%= proCountry %></p>
-        <p class="card-text">Rank: <%= proRank %> <%= proRankMovement %></p>
-        <p class="card-text">DoB: <%= proDoB %></p>
+        <p class="card-text">Rank: <%= proRank %></p>
+        <p class="card-text">Highest Rank Achieved: <%= proHighestRank %></p>
+        <p class="card-text">Turned Pro: <%= proYear %></p>
+        <p class="card-text">Age: <%= proAge %></p>
+        <p class="card-text">Height: <%= proHeight %></p>
+        <p class="card-text">Weight: <%= proWeight %></p>
         <p class="card-text">Plays: <%= proHandedness %></p>
+        <p class="card-text">2023 W/L: <%=  %></p>
+        <p class="card-text">Overall W/L: <%=  %></p>
       </div>
     </div>      
     

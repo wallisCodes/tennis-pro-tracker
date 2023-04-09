@@ -16,10 +16,12 @@ const api_key = process.env.API_KEY;
 var user_input, rankings_data;
 var game_type = "singles"; //will switch between singles, doubles or mixed depending on user input (TBD)
 var race_ranking = false; //will switch between true and false depending on user input (TBD)
-var data_fetched = false;
-var pro_name, pro_rank, pro_rank_movement, pro_country, pro_dob, pro_handedness; //is it possible to have this as an array to be passed to the ejs file?
+// var data_fetched = false;
+var pro_name, pro_rank, pro_rank_movement, pro_highest_rank, pro_country, pro_year, pro_age, pro_height, pro_weight, pro_handedness; //is it possible to have this as an array to be passed to the ejs file?
 var player_lookup = []; //array to store all player name and IDs so the user can search for a name and the
                         //corresponding ID can be used in another API request to retrieve player stats
+var male_player_nationalities = []; //array to store nationalities of top 500 male players
+var female_player_nationalities = []; //array to store nationalities of top 500 female players
 const rankings_url = "http://api.sportradar.us/tennis/trial/v3/en/rankings.json?api_key=" + api_key;
 // const competitions_url = "https://api.sportradar.us/tennis/trial/v3/en/competitions/sr:competition:3101/info.json?api_key=" + api_key;
 
@@ -41,16 +43,18 @@ async function getRankings() {
                 name: rankings_data[0].competitor_rankings[i].competitor.name,
                 id: rankings_data[0].competitor_rankings[i].competitor.id
             });
+            male_player_nationalities.push(rankings_data[0].competitor_rankings[i].competitor.country);
         } else { //female pros
             player_lookup.push({
                 name: rankings_data[1].competitor_rankings[i - total_pros/2].competitor.name,
                 id: rankings_data[1].competitor_rankings[i - total_pros/2].competitor.id
             });
+            female_player_nationalities.push(rankings_data[1].competitor_rankings[i - total_pros/2].competitor.country);
         }  
     }
     
-    // console.log("\nTop 500 men and women names and IDs:");
-    // console.log(player_lookup);
+    // console.log("Male nationalities:");
+    // console.log(male_player_nationalities);
 } 
 getRankings();
 
@@ -60,40 +64,83 @@ getRankings();
 async function getCompetitorProfile(competitor_id){
     const profile_url = "http://api.sportradar.us/tennis/trial/v3/en/competitors/" + competitor_id + "/profile.json?api_key=" + api_key;
     const response = await fetch(profile_url);
-    console.log("RESPONSE RECEIVED");
+    // console.log("RESPONSE RECEIVED");
     const profile_data = await response.json(); //entire API response
-    console.log("PROFILE RECEIVED");
+    // console.log("PROFILE RECEIVED");
    
     //TODO: Determine the index of the non-race-ranking info and use it to display the official rank (and movement)
     var correct_ranking_index;
-    console.log("Total sub-rankings: " + profile_data.competitor_rankings.length);
+    // console.log("Total sub-rankings: " + profile_data.competitor_rankings.length);
 
     for (let i=0; i < profile_data.competitor_rankings.length; i++){
         if (profile_data.competitor_rankings[i].race_ranking === race_ranking && profile_data.competitor_rankings[i].type === game_type){
             correct_ranking_index = i;
-            console.log("correct_ranking_index: " + i);
+            // console.log("correct_ranking_index: " + i);
+            console.log("Displayed ranking: " + game_type + ", race ranking: " + race_ranking);
         }
     }
+
+    function getAge(dateString){
+        var today = new Date();
+        var birthDate = new Date(dateString);
+        var age = today.getFullYear() - birthDate.getFullYear();
+        var m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
+    function getHeightImperial(height){
+        var inches = height/2.54;
+        var remainder = inches%12; //additional inches that don't make up a whole foot
+        var remainder_rounded = Math.round(remainder);
+        var whole_feet = (inches - remainder)/12;
+        var height_imperial = whole_feet + "'" + remainder_rounded + '"';
+        return height_imperial;
+    }
+
+    
+
     
     pro_name = profile_data.competitor.name;
-    pro_rank = profile_data.competitor_rankings[correct_ranking_index].rank; //competitor_rankings[0] for race rankings
-    pro_rank_movement = "(" + profile_data.competitor_rankings[correct_ranking_index].movement + ")"; //competitor_rankings[0] for race rankings
     pro_country = profile_data.competitor.country;
-    pro_dob = profile_data.info.date_of_birth; //TODO: calculate age from DoB
-    pro_handedness = profile_data.info.handedness + "-handed";
+    pro_rank_movement = " (" + profile_data.competitor_rankings[correct_ranking_index].movement + ")";
+    pro_rank = profile_data.competitor_rankings[correct_ranking_index].rank + pro_rank_movement;
 
-    console.log("PROFILE POPULATED");
-    // console.log("API REQUEST --PROFILE");
-    console.log("Rank: " + pro_rank + " " + pro_rank_movement);
-    data_fetched = true;
+    if ((profile_data.info.highest_singles_ranking || profile_data.info.highest_singles_ranking_date) === undefined){
+        pro_highest_rank = "N/A";
+    } else {pro_highest_rank = profile_data.info.highest_singles_ranking + " (" + profile_data.info.highest_singles_ranking_date + ")";}
+    
+    if (profile_data.info.pro_year === undefined){
+        pro_year = "N/A";
+    } else {pro_year = profile_data.info.pro_year;}
+    
+    if (profile_data.info.date_of_birth === undefined){
+        pro_age = "N/A";
+    } else {pro_age = getAge(profile_data.info.date_of_birth) + " (" + profile_data.info.date_of_birth + ")";}
+
+    if (profile_data.info.height === undefined){
+        pro_height = "N/A";
+    } else {pro_height = getHeightImperial(profile_data.info.height) + " (" + profile_data.info.height + "cm)";}
+    
+    if (profile_data.info.weight === undefined){
+        pro_weight = "N/A";
+    } else {pro_weight = profile_data.info.weight + "kg";}
+    
+    if (profile_data.info.handedness === undefined){
+        pro_handedness = "N/A";
+    } else {pro_handedness = profile_data.info.handedness.charAt(0).toUpperCase() + profile_data.info.handedness.slice(1) + "-Handed";}
+    
+    console.log("Rank: " + pro_rank);
 }
 
 
 ////////////////// HANDLING GET/POST REQUESTS //////////////////
 app.route("/")
   .get((req, res) => { 
-    res.render("tracker", {proName: pro_name, proRank: pro_rank, proRankMovement: pro_rank_movement, 
-                        proCountry: pro_country, proDoB: pro_dob, proHandedness: pro_handedness});
+    res.render("tracker", {proName: pro_name, proRank: pro_rank, proHighestRank: pro_highest_rank, proCountry: pro_country, proYear: pro_year,
+        proAge: pro_age, proHeight: pro_height, proWeight: pro_weight, proHandedness: pro_handedness});
     
     // console.log("REDIRECT --GET");
   })
@@ -136,12 +183,42 @@ app.route("/")
 
     function redirect(){
         res.redirect("/");
-        data_fetched = false;
         // console.log("AFTER REDIRECT --POST");
     }
   });
 
 
+//Convert both MM.YYYY and YYYY-MM-DD dates into reader-friendly format e.g. 5th May 2003
+function formatDate(){
+    test_date_1 = new Date("09.2022");
+    test_date_2 = new Date("2003-05-05");
+
+    // date_1_formatted = test_date_1.getDate(); //log -> NaN
+    // date_2_formatted = test_date_2.getDate(); //log -> 5
+
+    // date_1_formatted = test_date_1.getFullYear(); //log -> NaN
+    // date_2_formatted = test_date_2.getFullYear(); //log -> 2003
+
+    // date_1_formatted = test_date_1.getMonth(); //log -> NaN
+    // date_2_formatted = test_date_2.getMonth(); //log -> 4? How?
+
+    date_1_formatted = test_date_1.getDate(); //log -> NaN
+    date_2_formatted = test_date_2.getDate(); //log -> 5
+
+    console.log("Date 1 formatted: " + date_1_formatted);
+    console.log("Date 2 formatted: " + date_2_formatted);
+    var formattedDate = "";
+    // return formattedDate;
+}
+formatDate();
+
+
+//
+function formatUserInputtedPro(inputted_pro){
+
+    formatted_user_input = "";
+    return formatted_user_input;
+}
 
 
 app.listen(3000, function() {
