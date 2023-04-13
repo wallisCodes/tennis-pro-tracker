@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require("express");
 const ejs = require("ejs");
 const bodyParser = require("body-parser");
+const {formatUserInputtedPro, getAge, getHeightImperial, formatDate} = require("./tools.js"); 
 // const _ = require("lodash"); // needs to be installed via npm
 
 const app = express();
@@ -29,6 +30,7 @@ const rankings_url = "http://api.sportradar.us/tennis/trial/v3/en/rankings.json?
 ////////////////// FETCHING API DATA - TOP 500 MEN AND WOMENS RANKINGS //////////////////
 async function getRankings() {
     const response = await fetch(rankings_url);
+    // console.log(response);
     all_data = await response.json(); //entire API response
     rankings_data = all_data.rankings;
     // console.log("API REQUEST --RANKINGS");
@@ -55,13 +57,14 @@ async function getRankings() {
     
     // console.log("Male nationalities:");
     // console.log(male_player_nationalities);
+    // console.log(player_lookup);
 } 
 getRankings();
 
 
 //Function to retrieve specific pro stats based on which ID it is fed
 //FIXED singles race ranking being displayed instead of actual ranking
-async function getCompetitorProfile(competitor_id){
+async function v3GetCompetitorProfile(competitor_id){
     const profile_url = "http://api.sportradar.us/tennis/trial/v3/en/competitors/" + competitor_id + "/profile.json?api_key=" + api_key;
     const response = await fetch(profile_url);
     // console.log("RESPONSE RECEIVED");
@@ -76,32 +79,31 @@ async function getCompetitorProfile(competitor_id){
         if (profile_data.competitor_rankings[i].race_ranking === race_ranking && profile_data.competitor_rankings[i].type === game_type){
             correct_ranking_index = i;
             // console.log("correct_ranking_index: " + i);
-            console.log("Displayed ranking: " + game_type + ", race ranking: " + race_ranking);
+            // console.log("Displayed ranking: " + game_type + ", race ranking: " + race_ranking);
         }
     }
 
-    function getAge(dateString){
-        var today = new Date();
-        var birthDate = new Date(dateString);
-        var age = today.getFullYear() - birthDate.getFullYear();
-        var m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
-        return age;
+    const years_active = profile_data.periods.length;
+    var total_matches_played = 0;
+    var total_matches_won = 0;
+    //ytd = year-to-date
+    var ytd_matches_played = 0;
+    var ytd_matches_won = 0;
+    console.log("Total years active: " + years_active);
+    for (let i=0; i < years_active; i++){
+        total_matches_played += profile_data.periods[i].statistics.matches_played;
+        total_matches_won += profile_data.periods[i].statistics.matches_won;
     }
+    ytd_matches_played = profile_data.periods[0].statistics.matches_played;
+    ytd_matches_won = profile_data.periods[0].statistics.matches_won;
 
-    function getHeightImperial(height){
-        var inches = height/2.54;
-        var remainder = inches%12; //additional inches that don't make up a whole foot
-        var remainder_rounded = Math.round(remainder);
-        var whole_feet = (inches - remainder)/12;
-        var height_imperial = whole_feet + "'" + remainder_rounded + '"';
-        return height_imperial;
-    }
+    total_win_loss = " (" + (total_matches_won/total_matches_played)*100 + "%)";
+    ytd_win_loss = " (" + (ytd_matches_won/ytd_matches_played)*100 + "%)";
 
-    
-
+    console.log("v3 Total matches played: " + total_matches_played);
+    console.log("v3 Total matches won: " + total_matches_won + total_win_loss);
+    console.log("v3 YTD matches played: " + ytd_matches_played);
+    console.log("v3 YTD matches won: " + ytd_matches_won + ytd_win_loss);
     
     pro_name = profile_data.competitor.name;
     pro_country = profile_data.competitor.country;
@@ -110,7 +112,7 @@ async function getCompetitorProfile(competitor_id){
 
     if ((profile_data.info.highest_singles_ranking || profile_data.info.highest_singles_ranking_date) === undefined){
         pro_highest_rank = "N/A";
-    } else {pro_highest_rank = profile_data.info.highest_singles_ranking + " (" + profile_data.info.highest_singles_ranking_date + ")";}
+    } else {pro_highest_rank = profile_data.info.highest_singles_ranking + " (" + formatDate(profile_data.info.highest_singles_ranking_date) + ")";}
     
     if (profile_data.info.pro_year === undefined){
         pro_year = "N/A";
@@ -118,7 +120,7 @@ async function getCompetitorProfile(competitor_id){
     
     if (profile_data.info.date_of_birth === undefined){
         pro_age = "N/A";
-    } else {pro_age = getAge(profile_data.info.date_of_birth) + " (" + profile_data.info.date_of_birth + ")";}
+    } else {pro_age = getAge(profile_data.info.date_of_birth) + " (" + formatDate(profile_data.info.date_of_birth) + ")";}
 
     if (profile_data.info.height === undefined){
         pro_height = "N/A";
@@ -132,8 +134,52 @@ async function getCompetitorProfile(competitor_id){
         pro_handedness = "N/A";
     } else {pro_handedness = profile_data.info.handedness.charAt(0).toUpperCase() + profile_data.info.handedness.slice(1) + "-Handed";}
     
-    console.log("Rank: " + pro_rank);
+    // console.log("Rank: " + pro_rank);
 }
+
+
+//Quick comparison of v2 and v3 profile calls to see how many matches are shown in each
+//Goal for Nadal is to have 1288 matches played as shown on the ATP website
+async function v2GetCompetitorProfile(competitor_id){
+    const profile_url = "https://api.sportradar.com/tennis/trial/v2/en/players/" + competitor_id + "/profile.json?api_key=" + api_key;
+    const response = await fetch(profile_url);
+    const profile_data = await response.json(); //entire API response
+
+    const years_active = profile_data.statistics.periods.length;
+    var total_matches_played = 0;
+    var total_matches_won = 0;
+    var ytd_matches_played = 0;
+    var ytd_matches_won = 0;
+    console.log("Total years active: " + years_active);
+    for (let i=0; i < years_active; i++){
+        total_matches_played += profile_data.statistics.periods[i].statistics.matches_played;
+        total_matches_won += profile_data.statistics.periods[i].statistics.matches_won;
+    }
+    ytd_matches_played = profile_data.statistics.periods[0].statistics.matches_played;
+    ytd_matches_won = profile_data.statistics.periods[0].statistics.matches_won;
+
+    total_win_loss = " (" + (total_matches_won/total_matches_played)*100 + "%)";
+    ytd_win_loss = " (" + (ytd_matches_won/ytd_matches_played)*100 + "%)";
+
+    console.log("v2 Total matches played: " + total_matches_played);
+    console.log("v2 Total matches won: " + total_matches_won + total_win_loss);
+    console.log("v2 YTD matches played: " + ytd_matches_played);
+    console.log("v2 YTD matches won: " + ytd_matches_won + ytd_win_loss);
+}
+
+
+async function v2getHeadToHead(competitor_1_id, competitor_2_id){
+    const h2h_url = "http://api.sportradar.com/tennis/trial/v2/en/players/" + competitor_1_id + "/versus/" + competitor_2_id + "/matches.json?api_key=" + api_key;
+    const response = await fetch(h2h_url);
+    const h2h_data = await response.json(); //entire API response
+    
+    const h2h_games_played = h2h_data.last_meetings.results.length
+    console.log("Total h2h matches played: " + h2h_games_played);
+
+    console.log("Testing h2h data:");
+    console.log(h2h_data.last_meetings.results[0]);
+}
+// v2getHeadToHead();
 
 
 ////////////////// HANDLING GET/POST REQUESTS //////////////////
@@ -170,7 +216,8 @@ app.route("/")
     //Check to see whether a player was found or not and display relevant message to the user
     if (player_found === true){
         console.log("Player found!");
-        getCompetitorProfile(pro_id);
+        // v2GetCompetitorProfile(pro_id);
+        v3GetCompetitorProfile(pro_id);
     }
     else {
         console.log("Player not found, please search again.");
@@ -188,37 +235,6 @@ app.route("/")
   });
 
 
-//Convert both MM.YYYY and YYYY-MM-DD dates into reader-friendly format e.g. 5th May 2003
-function formatDate(){
-    test_date_1 = new Date("09.2022");
-    test_date_2 = new Date("2003-05-05");
-
-    // date_1_formatted = test_date_1.getDate(); //log -> NaN
-    // date_2_formatted = test_date_2.getDate(); //log -> 5
-
-    // date_1_formatted = test_date_1.getFullYear(); //log -> NaN
-    // date_2_formatted = test_date_2.getFullYear(); //log -> 2003
-
-    // date_1_formatted = test_date_1.getMonth(); //log -> NaN
-    // date_2_formatted = test_date_2.getMonth(); //log -> 4? How?
-
-    date_1_formatted = test_date_1.getDate(); //log -> NaN
-    date_2_formatted = test_date_2.getDate(); //log -> 5
-
-    console.log("Date 1 formatted: " + date_1_formatted);
-    console.log("Date 2 formatted: " + date_2_formatted);
-    var formattedDate = "";
-    // return formattedDate;
-}
-formatDate();
-
-
-//
-function formatUserInputtedPro(inputted_pro){
-
-    formatted_user_input = "";
-    return formatted_user_input;
-}
 
 
 app.listen(3000, function() {
